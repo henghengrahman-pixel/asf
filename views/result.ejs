@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rekap DP - DP Checker</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="topbar"><div><b>DP CHECKER PANEL</b></div><form method="post" action="/logout"><button class="btn ghost">Logout</button></form></header>
+<div class="layout">
+  <aside class="sidebar"><a href="/">Dashboard</a><a href="/check">Cek DP Hari Ini</a><a href="/history">Riwayat Rekap</a><a href="/session-agent">Session Agen</a></aside>
+  <main class="content">
+    <section class="hero">
+      <h1>REKAP DP HARI INI - <%= batch.date %></h1>
+      <div class="actions">
+        <a class="btn primary" href="/check">CEK LAGI</a>
+        <button class="btn primary" type="button" id="copyRecapBtn">SALIN REKAP</button>
+        <a class="btn secondary" href="/export/<%= batch.id %>.csv">EXPORT CSV</a>
+      </div>
+      <div id="copyStatus" class="copy-status" aria-live="polite"></div>
+    </section>
+
+    <div class="cards summary">
+      <div class="card"><span>Total ID</span><strong><%= batch.summary.totalIds %></strong></div>
+      <div class="card"><span>Ada DP</span><strong class="ok"><%= batch.summary.hasDp %></strong></div>
+      <div class="card"><span>Tidak Ada DP</span><strong class="warn"><%= batch.summary.noDp %></strong></div>
+      <div class="card"><span>ID Tidak Valid</span><strong class="bad"><%= batch.summary.invalid %></strong></div>
+      <div class="card"><span>Total Transaksi DP</span><strong><%= batch.summary.totalTransaksi %></strong></div>
+      <div class="card"><span>Total Nominal DP</span><strong>Rp<%= money(batch.summary.totalNominal) %></strong></div>
+    </div>
+
+    <% const has=batch.results.filter(x=>x.status==='has_dp'); %>
+    <% const no=batch.results.filter(x=>x.status==='no_dp'); %>
+    <% const bad=batch.results.filter(x=>x.status==='invalid'); %>
+    <% const errs=batch.results.filter(x=>x.status==='error'); %>
+
+    <section class="panel">
+      <h2>✅ ADA DP HARI INI (<%= batch.summary.hasDp %>)</h2>
+      <% if(!has.length){ %><p class="empty">Tidak ada.</p><% } else { %>
+      <div class="table-wrap"><table><thead><tr><th>No</th><th>UserId</th><th>Jumlah DP</th><th>Total DP Hari Ini</th><th>Keterangan</th></tr></thead><tbody>
+        <% has.forEach((r,i)=>{ %><tr><td><%= i+1 %></td><td><b><%= r.userId %></b></td><td><%= r.jumlahDp %></td><td>Rp<%= money(r.totalDp) %></td><td class="ok"><%= r.keterangan %></td></tr><% }) %>
+      </tbody></table></div><% } %>
+    </section>
+
+    <section class="panel">
+      <h2>⚠️ TIDAK ADA DP HARI INI (<%= batch.summary.noDp %>)</h2>
+      <% if(!no.length){ %><p class="empty">Tidak ada.</p><% } else { %>
+      <div class="table-wrap"><table><thead><tr><th>No</th><th>UserId</th><th>Total DP</th><th>Keterangan</th></tr></thead><tbody>
+        <% no.forEach((r,i)=>{ %><tr><td><%= i+1 %></td><td><b><%= r.userId %></b></td><td>Rp0</td><td class="warn">Tidak ada DP hari ini</td></tr><% }) %>
+      </tbody></table></div><% } %>
+    </section>
+
+    <section class="panel">
+      <h2>❌ ID TIDAK VALID (<%= batch.summary.invalid %>)</h2>
+      <% if(!bad.length){ %><p class="empty">Tidak ada.</p><% } else { %>
+      <div class="table-wrap"><table><thead><tr><th>No</th><th>UserId</th><th>Keterangan</th></tr></thead><tbody>
+        <% bad.forEach((r,i)=>{ %><tr><td><%= i+1 %></td><td><b><%= r.userId %></b></td><td class="bad">ID tidak valid</td></tr><% }) %>
+      </tbody></table></div><% } %>
+    </section>
+
+    <% if(errs.length){ %>
+    <section class="panel"><h2>🔧 ERROR (<%= errs.length %>)</h2><div class="table-wrap"><table><thead><tr><th>No</th><th>UserId</th><th>Keterangan</th></tr></thead><tbody>
+      <% errs.forEach((r,i)=>{ %><tr><td><%= i+1 %></td><td><b><%= r.userId %></b></td><td class="bad"><%= r.keterangan %></td></tr><% }) %>
+    </tbody></table></div></section>
+    <% } %>
+
+    <section class="panel recap-copy-panel">
+      <h2>📋 REKAP SIAP COPY-PASTE</h2>
+      <p class="empty">Format ini bisa langsung disalin ke WhatsApp atau chat.</p>
+      <textarea id="recapText" class="recap-text" readonly>📊 REKAP DP HARI INI
+📅 Tanggal: <%= batch.date %>
+
+✅ ADA DP HARI INI (<%= has.length %>)
+<% if(!has.length){ %>Tidak ada.
+<% } else { has.forEach((r,i)=>{ %>
+<%= i+1 %>. UserId: <%= r.userId %>
+   Jumlah DP: <%= r.jumlahDp %> transaksi
+   Total DP: Rp<%= money(r.totalDp) %>
+<% }) } %>
+
+⚠️ TIDAK ADA DP HARI INI (<%= no.length %>)
+<% if(!no.length){ %>Tidak ada.
+<% } else { no.forEach((r,i)=>{ %><%= i+1 %>. UserId: <%= r.userId %>
+<% }) } %>
+
+❌ ID TIDAK VALID (<%= bad.length %>)
+<% if(!bad.length){ %>Tidak ada.
+<% } else { bad.forEach((r,i)=>{ %><%= i+1 %>. UserId: <%= r.userId %>
+<% }) } %>
+<% if(errs.length){ %>
+🔧 ERROR (<%= errs.length %>)
+<% errs.forEach((r,i)=>{ %><%= i+1 %>. UserId: <%= r.userId %> - <%= r.keterangan %>
+<% }) } %>
+━━━━━━━━━━━━━━━━━━━━
+📌 RINGKASAN
+
+Total ID Dicek: <%= batch.summary.totalIds %>
+ID Valid: <%= batch.summary.valid %>
+Ada DP Hari Ini: <%= batch.summary.hasDp %>
+Tidak Ada DP Hari Ini: <%= batch.summary.noDp %>
+ID Tidak Valid: <%= batch.summary.invalid %>
+<% if(batch.summary.error){ %>Error: <%= batch.summary.error %>
+<% } %>
+Total Transaksi DP: <%= batch.summary.totalTransaksi %>
+Total Nominal DP: Rp<%= money(batch.summary.totalNominal) %>
+━━━━━━━━━━━━━━━━━━━━</textarea>
+      <button class="btn primary" type="button" id="copyRecapBtnBottom">SALIN REKAP</button>
+    </section>
+  </main>
+</div>
+<script>
+(function(){
+  const text = document.getElementById('recapText');
+  const status = document.getElementById('copyStatus');
+  async function copyRecap(){
+    const value = text.value.trim();
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        text.focus(); text.select();
+        if (!document.execCommand('copy')) throw new Error('copy_failed');
+        text.setSelectionRange(0, 0);
+      }
+      status.textContent = '✅ Rekap berhasil disalin.';
+      setTimeout(() => { status.textContent = ''; }, 2500);
+    } catch (e) {
+      status.textContent = '❌ Gagal menyalin otomatis. Pilih teks rekap lalu copy manual.';
+    }
+  }
+  document.getElementById('copyRecapBtn').addEventListener('click', copyRecap);
+  document.getElementById('copyRecapBtnBottom').addEventListener('click', copyRecap);
+})();
+</script>
+</body>
+</html>
