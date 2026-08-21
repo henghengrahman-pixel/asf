@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Staf Jobdesk — {{channel.category}} {{channel.name}}{% endblock %}
+{% block page_title %}Staf Jobdesk{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{channel.category}} {{channel.name}}</h1><p>Daftar staf yang saat ini mendapat penugasan aktif pada jobdesk ini.</p></div><a class="btn secondary" href="{{url_for('channels_page')}}">← Master Jobdesk</a></div>
+<div class="metric-grid"><div class="card metric"><span>Jobdesk</span><b>{{channel.category}} {{channel.name}}</b><small>Status: {{channel.status}}</small></div><div class="card metric"><span>Staf Aktif</span><b>{{rows|length}}</b><small>Terhubung dari Board Penugasan Aktif</small></div></div>
+<div class="card table-card"><div class="section-head"><div><h2>Staf Terhubung</h2><p>Data ini mengikuti penugasan aktif. Jika penugasan staf diubah, daftar ini ikut berubah otomatis.</p></div><input class="search" id="staffSearch" placeholder="Cari nama, CS, kantor, shift..." oninput="filterStaff()"></div>
+<div class="table-wrap"><table id="staffJobTable"><thead><tr><th>Staf</th><th>Jabatan</th><th>Kantor</th><th>Shift</th><th>Jam</th><th>Status</th></tr></thead><tbody>
+{% for r in rows %}<tr data-search="{{(r.staff_name ~ ' ' ~ (r.cs_name or '') ~ ' ' ~ (r.office_name or '') ~ ' ' ~ (r.shift_name or '') ~ ' ' ~ (r.position or ''))|lower}}"><td><b>{{r.staff_name}}</b><small>{{r.cs_name or '-'}}</small></td><td>{{r.position or '-'}}</td><td>{{r.office_name or '-'}}</td><td><span class="shift-badge">{{r.shift_name or '-'}}</span></td><td>{{r.start_time or '-'}}–{{r.end_time or '-'}}</td><td><span class="badge {{'ok' if r.staff_status=='Aktif' else ''}}">{{r.staff_status}}</span></td></tr>
+{% else %}<tr><td colspan="6" class="empty">Belum ada staf dengan penugasan aktif pada jobdesk ini.</td></tr>{% endfor %}
+</tbody></table></div></div>
+<script>function filterStaff(){const q=(staffSearch.value||'').toLowerCase();document.querySelectorAll('#staffJobTable tbody tr[data-search]').forEach(r=>r.style.display=(r.dataset.search||'').includes(q)?'':'none')}</script>
+{% endblock %}

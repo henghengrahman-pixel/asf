@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block page_title %}Master Website{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Master Website</h1><p>Kelola website untuk modul Cek DP. Website aktif otomatis muncul di Dashboard Marketing 8008.</p></div></div>
+<section class="card master-site-form-card">
+  <div class="section-head"><div><h2>Tambah Website</h2><p>Masukkan nama brand dan URL Agent Player List.</p></div></div>
+  <form method="post" action="{{url_for('master_websites_page')}}" class="formgrid master-site-form">
+    <label>Nama Website<input name="name" placeholder="Contoh: RUPIAHTOTO" maxlength="60" required></label>
+    <label class="span-3">URL Agent Player List<input name="playerListUrl" placeholder="https://agwl1.suksesbogil.com/agentplayerlist.php" required></label>
+    <label class="span-4">Session / document.cookie <small>Opsional. Bisa juga diisi nanti dari menu Session Agent.</small><textarea name="cookie" rows="3" placeholder="PHPSESSID=...; cookie_lain=..."></textarea></label>
+    <label>Status<select name="active"><option value="1">Aktif</option><option value="0">Nonaktif</option></select></label>
+    <div class="form-actions span-4"><button class="btn">+ Tambah Website</button></div>
+  </form>
+</section>
+
+<section class="card table-card master-site-list">
+  <div class="section-head"><div><h2>Daftar Website</h2><p>{{sites|length}} website terdaftar.</p></div></div>
+  <div class="website-admin-grid">
+  {% for s in sites %}
+    <article class="website-admin-card {{'inactive' if not s.active else ''}}">
+      <div class="website-card-top"><div><span class="website-kicker">WEBSITE</span><h3>{{s.name}}</h3><small>{{s.baseUrl or '-'}}</small></div><span class="badge {{'ok' if s.active else 'muted'}}">{{'AKTIF' if s.active else 'NONAKTIF'}}</span></div>
+      <div class="website-card-info"><div><span>URL Agent</span><code>{{s.playerListUrl}}</code></div><div><span>Session</span><b class="{{'session-ok' if s.cookieEnc else 'session-missing'}}">{{'● Tersimpan' if s.cookieEnc else '● Belum Ada'}}</b></div></div>
+      <div class="website-card-actions">
+        <a class="btn small" href="{{url_for('website_hub',site_id=s.id)}}">Buka Website</a>
+        <details class="site-edit"><summary class="btn small secondary">Edit</summary><form method="post" action="{{url_for('master_website_update',site_id=s.id)}}" class="stack site-edit-form"><label>Nama<input name="name" value="{{s.name}}" required></label><label>URL Agent<input name="playerListUrl" value="{{s.playerListUrl}}" required></label><label>Session<textarea name="cookie" rows="2" placeholder="Kosongkan jika tidak diganti"></textarea></label><label>Status<select name="active"><option value="1" {% if s.active %}selected{% endif %}>Aktif</option><option value="0" {% if not s.active %}selected{% endif %}>Nonaktif</option></select></label><button class="btn small">Simpan Perubahan</button></form></details>
+        <form method="post" action="{{url_for('master_website_delete',site_id=s.id)}}" onsubmit="return confirm('Hapus website {{s.name}}?')"><button class="btn small danger">Hapus</button></form>
+      </div>
+    </article>
+  {% else %}<div class="empty span-4">Belum ada website. Tambahkan website pertama di atas.</div>{% endfor %}
+  </div>
+</section>
+{% endblock %}

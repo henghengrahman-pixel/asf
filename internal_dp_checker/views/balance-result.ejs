@@ -1,0 +1,20 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hasil Cek Saldo <%= site.name %> — MARKETING 8008</title><link rel="stylesheet" href="/app.css?v=marketing8008-v3"></head><body class="ri81-app crm-dp-app">
+<aside class="sidebar"><div class="brand"><div><h2>MARKETING 8008</h2><small>CRM OPERASIONAL</small></div></div><nav>
+<a href="/__crm_dashboard__">⌂ <span>Dashboard</span></a><div class="nav-label">WEBSITE</div><a class="site-title" href="/site/<%= site.id %>">◈ <span><%= site.name %></span></a><a href="/site/<%= site.id %>/check">✓ <span>Cek DP</span></a><a class="active" href="/site/<%= site.id %>/balance">◉ <span>Cek Saldo Member</span></a><a href="/site/<%= site.id %>/history">▤ <span>Riwayat Rekap</span></a><a href="/site/<%= site.id %>/session-agent">⚿ <span>Session Agent</span></a>
+</nav><div class="side-footer"><div><b><%= crmUser %></b><small><%= String(crmRole||'').toUpperCase() %></small></div><a href="/__crm_dashboard__">Dashboard</a></div></aside>
+<main><header class="topbar"><div><strong><%= site.name %></strong><small>MARKETING 8008 • CRM TERPADU</small></div><div class="user-pill"><span class="avatar"><%= String(crmUser||'M').charAt(0).toUpperCase() %></span><div><b><%= crmUser %></b><small><%= String(crmRole||'').toUpperCase() %></small></div></div></header><div class="content">
+<section class="hero"><h1>HASIL CEK SALDO — <%= site.name %></h1><p class="muted">Saldo terbaru berdasarkan kolom Balance pada agent saat pengecekan dilakukan.</p><div class="actions"><a class="btn primary" href="/site/<%= site.id %>/balance">CEK LAGI</a><button class="btn primary" id="copyBtn" type="button">SALIN HASIL</button><a class="btn secondary" href="/balance-export/<%= batch.id %>.csv">EXPORT CSV</a></div><div id="copyStatus" class="copy-status"></div></section>
+<div class="cards summary"><div class="card"><span>Total ID</span><strong><%= batch.summary.totalIds %></strong></div><div class="card"><span>ID Valid</span><strong class="ok"><%= batch.summary.valid %></strong></div><div class="card"><span>ID Tidak Valid</span><strong class="bad"><%= batch.summary.invalid %></strong></div><div class="card"><span>Error</span><strong class="warn"><%= batch.summary.error %></strong></div><div class="card"><span>Total Saldo</span><strong>Rp<%= money(batch.summary.totalBalance) %></strong></div></div>
+<section class="panel"><h2>Saldo Member</h2><div class="table-wrap"><table><thead><tr><th>No</th><th>UserId</th><th>Status</th><th>Saldo Sekarang</th><th>Percobaan</th></tr></thead><tbody><% (batch.results||[]).forEach((r,i)=>{ %><tr><td><%= i+1 %></td><td><b><%= r.userId %></b></td><td class="<%= r.status==='valid'?'ok':r.status==='invalid'?'bad':'warn' %>"><%= r.keterangan %></td><td><%= r.status==='valid' ? 'Rp'+money(r.balance||0) : '-' %></td><td><%= r.attemptUsed||1 %>x</td></tr><% }) %></tbody></table></div></section>
+<section class="panel"><h2>📋 HASIL SIAP COPY-PASTE</h2><textarea id="copyText" class="recap-text" readonly>💰 CEK SALDO MEMBER - <%= site.name %>
+
+<% (batch.results||[]).forEach((r,i)=>{ %><%= i+1 %>. <%= r.userId %> — <%= r.status==='valid' ? 'Rp'+money(r.balance||0) : r.keterangan %>
+<% }) %>
+━━━━━━━━━━━━━━━━━━━━
+Total ID: <%= batch.summary.totalIds %>
+ID Valid: <%= batch.summary.valid %>
+ID Tidak Valid: <%= batch.summary.invalid %>
+Error: <%= batch.summary.error %>
+Total Saldo: Rp<%= money(batch.summary.totalBalance) %>
+━━━━━━━━━━━━━━━━━━━━</textarea></section>
+</div></main><script>(function(){const t=document.getElementById('copyText'),s=document.getElementById('copyStatus');document.getElementById('copyBtn').onclick=async()=>{try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(t.value.trim());else{t.focus();t.select();document.execCommand('copy')}s.textContent='✅ Hasil berhasil disalin.';setTimeout(()=>s.textContent='',2500)}catch{s.textContent='❌ Gagal copy otomatis.'}}})();</script></body></html>
