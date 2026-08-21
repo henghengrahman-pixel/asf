@@ -1,0 +1,6 @@
+MARKETING 8008 CRM - FIX 2026-08-21
+- Hapus Tambah Penugasan
+- Tambah Staf tanpa Kode Agent/Telegram ID
+- Jabatan: CRM, Telemarketing, ADS, Admin Supervisor, Leader
+- Master Jobdesk terhubung Master Website
+- Master Website memakai tema CRM Marketing 8008
