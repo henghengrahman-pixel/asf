@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+  <title>Login • HUT RI ke-81</title>
+</head>
+<body class="login ri81-login">
+  <div class="ri81-login-shell">
+    <section class="ri81-hero" aria-label="HUT Republik Indonesia ke-81">
+      <div class="ri81-flag" aria-hidden="true"><span></span><span></span></div>
+      <div class="ri81-kicker">17 AGUSTUS 1945 — 17 AGUSTUS 2026</div>
+      <div class="ri81-number"><span>8</span><span>1</span></div>
+      <div class="ri81-hero-copy">
+        <strong>DIRGAHAYU</strong>
+        <h1>REPUBLIK INDONESIA</h1>
+        <p>HUT RI KE-81 • MERDEKA!</p>
+      </div>
+      <div class="ri81-stripes" aria-hidden="true"><i></i><i></i><i></i></div>
+    </section>
+
+    <form method="post" class="card loginbox ri81-loginbox">
+      <div class="login-brand">
+        <small>STAFF MANAGEMENT SYSTEM</small>
+        <h2>KENZO TIGER8008</h2>
+        <p>Silakan masuk menggunakan akun kerja Anda.</p>
+      </div>
+      <label>ID Login
+        <input name="username" autocomplete="username" required placeholder="Masukkan ID Login">
+      </label>
+      <label>Password
+        <input name="password" type="password" autocomplete="current-password" required placeholder="Masukkan Password">
+      </label>
+      <button class="ri81-login-btn">MASUK DASHBOARD</button>
+      {% with m=get_flashed_messages(with_categories=true) %}{% for c,x in m %}<div class="flash {{c}}">{{x}}</div>{% endfor %}{% endwith %}
+      <div class="ri81-login-note"><span>MERAH</span> • PUTIH • INDONESIA</div>
+    </form>
+  </div>
+</body>
+</html>
