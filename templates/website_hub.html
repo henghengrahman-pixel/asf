@@ -1,4 +1,0 @@
-{% extends 'base.html' %}{% block page_title %}{{site.name}}{% endblock %}{% block content %}
-<div class="page-head"><div><h1>{{site.name}}</h1><p>Modul website terhubung ke Master Website dan hanya dapat diakses Leader, SPV, dan Master.</p></div><span class="badge ok">AKTIF</span></div>
-<div class="quick-grid"><a class="card shortcut-card" href="/dp/site/{{site.id}}/check"><span>{{site.name}}</span><b>Cek DP</b><small>Batch, retry, progress, periode, detail transaksi</small></a><a class="card shortcut-card" href="/dp/site/{{site.id}}/history"><span>{{site.name}}</span><b>Riwayat Rekap</b><small>Rekap pengecekan yang tersimpan</small></a><a class="card shortcut-card" href="/dp/site/{{site.id}}/session-agent"><span>{{site.name}}</span><b>Session Agent</b><small>Session khusus website ini</small></a></div>
-{% endblock %}
