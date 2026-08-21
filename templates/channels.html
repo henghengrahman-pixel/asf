@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Master Jobdesk — MARKETING 8008{% endblock %}
+{% block page_title %}Master Jobdesk{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Master Jobdesk Global</h1><p>Nama website ditulis manual dan dapat digunakan untuk pengelompokan jobdesk Marketing 8008.</p></div><button type="button" class="btn secondary" onclick="resetChannel()">+ Jobdesk Baru</button></div>
+<div class="info-strip"><b>Nama Website Manual</b><span>Ketik nama website secara bebas, lalu pilih kategori: CRM, ADS, TELEMARKETING, atau LEADER.</span></div>
+<form method="post" class="card formgrid compact-master" id="channelForm">
+  <input type="hidden" name="id" id="c_id">
+  <label>NAMA WEBSITE<input type="text" name="name" id="c_name" maxlength="80" placeholder="Contoh: OMTOGEL" autocomplete="off" required></label>
+  <label>KATEGORI<select name="category" id="c_category"><option value="CRM">CRM</option><option value="ADS">ADS</option><option value="TELEMARKETING">TELEMARKETING</option><option value="LEADER">LEADER</option></select></label>
+  <label>Status<select name="status" id="c_status"><option>Aktif</option><option>Nonaktif</option></select></label>
+  <div class="form-actions span-4"><button class="btn" id="c_submit">Simpan</button><button type="button" class="btn secondary" onclick="resetChannel()">Batal Edit</button></div>
+</form>
+<div class="card table-card">
+ <div class="section-head"><div><h2>Daftar Website & Jobdesk</h2><p>Nama website pada Jobdesk berdiri sendiri dan tidak wajib sama dengan Master Website DP.</p></div><input class="search" id="jobSearch" placeholder="Cari website atau kategori..." oninput="filterJobs()"></div>
+ <div class="table-wrap"><table id="jobTable"><thead><tr><th>Nama Website</th><th>Kategori</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
+ {% for r in rows %}<tr data-search="{{r.name|lower}} {{r.category|lower}}"><td><strong>{{r.name}}</strong></td><td><span class="category-chip">{{r.category}}</span></td><td><span class="badge {{'ok' if r.status=='Aktif' else 'muted'}}">{{r.status}}</span></td><td><div class="actions"><button type="button" class="btn small secondary" onclick='editChannel({{r.id}},{{r.name|tojson}},{{r.category|tojson}},{{r.status|tojson}})'>Edit</button><form method="post" action="{{url_for('channel_delete',cid=r.id)}}" onsubmit="return confirm('Hapus/nonaktifkan data ini? Riwayat lama tetap aman.')"><button class="btn small danger">Hapus</button></form></div></td></tr>
+ {% else %}<tr><td colspan="4" class="empty">Belum ada data. Tambahkan Nama Website dan kategori jobdesk.</td></tr>{% endfor %}
+ </tbody></table></div>
+</div>
+<script>
+function editChannel(id,n,c,s){c_id.value=id;c_name.value=n;c_category.value=c;c_status.value=s;c_submit.textContent='Update';channelForm.scrollIntoView({behavior:'smooth'})}
+function resetChannel(){channelForm.reset();c_id.value='';c_submit.textContent='Simpan'}
+function filterJobs(){const q=jobSearch.value.toLowerCase();document.querySelectorAll('#jobTable tbody tr[data-search]').forEach(r=>r.style.display=r.dataset.search.includes(q)?'':'none')}
+</script>
+{% endblock %}

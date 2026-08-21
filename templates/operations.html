@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block page_title %}Operasional Kerja{% endblock %}
+{% block content %}
+<div class="page-head ops-page-head"><div><h1>Operasional Kerja</h1><p>Kelola Shift Global dan pantau Board Penugasan Aktif.</p></div></div>
+<div class="ops-summary global-summary">
+  <div class="card ops-stat"><span>Total Staf Aktif</span><b>{{totals.active_staff}}</b><small>seluruh kantor</small></div>
+  <div class="card ops-stat"><span>Sudah Ditugaskan</span><b>{{totals.assigned}}</b><small>aktif sekarang</small></div>
+  <div class="card ops-stat"><span>Belum Ditugaskan</span><b>{{totals.unassigned}}</b><small>belum masuk board</small></div>
+  <div class="card ops-stat"><span>Shift Global Aktif</span><b>{{totals.active_shifts}}</b><small>berlaku semua kantor</small></div>
+</div>
+<section class="card ops-panel shift-manager">
+  <div class="panel-head"><div><h2>Shift Global</h2><p>Satu daftar shift untuk seluruh kantor.</p></div><button class="btn secondary small" type="button" onclick="resetShift()">+ Shift Baru</button></div>
+  <form method="post" class="shift-form-clean" id="shiftForm">
+    <input type="hidden" name="action" value="shift_save"><input type="hidden" name="shift_id" id="shiftId">
+    <label>Nama Shift<input name="name" id="shiftName" placeholder="Contoh: Shift Utama" required></label>
+    <label>Kode<input name="code" id="shiftCode" placeholder="S1"></label>
+    <label>Mulai<input type="time" name="start_time" id="shiftStart" required></label>
+    <label>Selesai<input type="time" name="end_time" id="shiftEnd" required></label>
+    <label>Status<select name="status" id="shiftStatus"><option>Aktif</option><option>Nonaktif</option></select></label>
+    <button class="btn" id="shiftSubmit">Simpan Shift</button>
+  </form>
+  <div class="shift-table-wrap"><table class="compact-table shift-table"><thead><tr><th>Shift</th><th>Jam</th><th>Status</th><th class="right">Aksi</th></tr></thead><tbody>
+  {% for s in shifts %}<tr class="{{'is-muted' if s.status!='Aktif' else ''}}"><td><b>{{s.name}}</b><small>{{s.code or '-'}}</small></td><td>{{s.start_time}}–{{s.end_time}}</td><td><span class="badge {{'ok' if s.status=='Aktif' else ''}}">{{s.status}}</span></td><td class="right actions-cell"><button type="button" class="btn tiny secondary" onclick='editShift({{s.id}},{{s.name|tojson}},{{(s.code or "")|tojson}},{{s.start_time|tojson}},{{s.end_time|tojson}},{{s.status|tojson}})'>Edit</button><form method="post" onsubmit="return confirm('Hapus/nonaktifkan shift ini?')"><input type="hidden" name="action" value="shift_delete"><input type="hidden" name="shift_id" value="{{s.id}}"><button class="btn tiny danger">Hapus</button></form></td></tr>{% else %}<tr><td colspan="4" class="empty">Belum ada shift global.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<section class="card assignment-board-table-card" id="assignmentBoard">
+  <div class="assignment-board-head"><div><h2>Board Penugasan Aktif</h2><p>Menampilkan seluruh penugasan yang masih aktif.</p></div><div class="board-search-wrap"><input id="boardSearch" type="search" placeholder="Cari staf, CS, kantor, shift, atau website..."><span id="boardVisibleCount">{{totals.assigned}} staf</span></div></div>
+  <div class="shift-filter-pills" id="shiftPills"><button type="button" class="shift-pill active" data-shift="">Semua <b>{{totals.assigned}}</b></button>{% for block in by_shift if block.staff %}<button type="button" class="shift-pill" data-shift="{{block.shift.name|lower}}">{{block.shift.name}} <b>{{block.staff|length}}</b></button>{% endfor %}</div>
+  <div class="table-wrap assignment-table-wrap"><table class="assignment-table"><thead><tr><th>Staf</th><th>Kantor</th><th>Shift</th><th>Penugasan Aktif</th><th class="right">Aksi</th></tr></thead><tbody id="assignmentRows">
+  {% for r in assigned_rows %}<tr class="assignment-row" data-shift="{{r.shift_name|lower}}" data-search="{{(r.staff_name ~ ' ' ~ (r.cs_name or '') ~ ' ' ~ (r.office_name or '') ~ ' ' ~ r.shift_name ~ ' ' ~ (r.channels|map(attribute='name')|join(' ')))|lower}}"><td class="staff-cell"><div class="staff-avatar">{{r.staff_name[:1]|upper}}</div><div><b>{{r.staff_name}}</b><small>{{r.cs_name or 'CS belum diisi'}}</small></div></td><td><b>{{r.office_name or 'Belum diatur'}}</b></td><td><span class="shift-badge">{{r.shift_name}}</span><small>{{r.start_time}}–{{r.end_time}}</small></td><td class="jobs-cell"><div class="assignment-tags compact-tags">{% for j in r.channels %}<span class="job-tag">{{j.name}} · {{j.category}}</span>{% endfor %}</div></td><td class="right actions-cell"><form method="post" onsubmit="return confirm('Hapus seluruh penugasan staf ini?')"><input type="hidden" name="action" value="assignment_delete"><input type="hidden" name="staff_id" value="{{r.staff_id}}"><button class="btn tiny danger">Hapus</button></form></td></tr>{% else %}<tr><td colspan="5" class="empty">Belum ada penugasan aktif.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% if unassigned %}<div class="unassigned-inline"><div class="unassigned-inline-head"><b>Belum Ditugaskan</b><span>{{unassigned|length}} staf</span></div><div class="unassigned-list compact-unassigned">{% for s in unassigned %}<div class="unassigned-person"><span>{{s.name}}</span><small>{{s.office_name or '-'}}</small></div>{% endfor %}</div></div>{% endif %}
+</section>
+<script>
+function editShift(id,name,code,start,end,status){shiftId.value=id;shiftName.value=name;shiftCode.value=code;shiftStart.value=start;shiftEnd.value=end;shiftStatus.value=status;shiftSubmit.textContent='Update Shift';shiftName.focus()}
+function resetShift(){shiftForm.reset();shiftId.value='';shiftSubmit.textContent='Simpan Shift';shiftName.focus()}
+const boardSearch=document.getElementById('boardSearch');const rows=[...document.querySelectorAll('.assignment-row')];let activeShift='';
+function filterBoard(){const q=(boardSearch.value||'').trim().toLowerCase();let total=0;rows.forEach(row=>{const show=(!q||(row.dataset.search||'').includes(q))&&(!activeShift||row.dataset.shift===activeShift);row.style.display=show?'':'none';if(show)total++});boardVisibleCount.textContent=`${total} staf`}
+boardSearch.addEventListener('input',filterBoard);document.querySelectorAll('.shift-pill[data-shift]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.shift-pill').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeShift=btn.dataset.shift||'';filterBoard()}));filterBoard();
+</script>
+{% endblock %}
