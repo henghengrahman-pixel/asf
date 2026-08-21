@@ -1,0 +1,7 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard - DP Checker</title><link rel="stylesheet" href="/app.css"></head><body>
+<header class="topbar"><div><b>DP CHECKER PANEL</b><span> · <%= dateWib %></span></div><form method="post" action="/logout"><button class="btn ghost">Logout</button></form></header>
+<div class="layout"><aside class="sidebar"><a class="active" href="/">Dashboard</a><a href="/master-websites">Master Website</a><div class="sidebar-label">WEBSITE</div><% sites.forEach(s=>{ %><a href="/site/<%= s.id %>"><%= s.name %></a><% }) %></aside>
+<main class="content"><section class="hero"><h1>Dashboard</h1><p>Pilih website untuk membuka Cek DP, Riwayat Rekap, dan Session Agent.</p><div class="actions"><a class="btn primary" href="/master-websites">+ MASTER WEBSITE</a></div></section>
+<% if(!sites.length){ %><section class="panel"><p class="empty">Belum ada website aktif. Tambahkan dari Master Website.</p></section><% } else { %>
+<div class="site-grid"><% sites.forEach(s=>{ %><a class="site-card" href="/site/<%= s.id %>"><div class="site-name"><%= s.name %></div><div class="muted small"><%= s.baseUrl %></div><div class="site-meta"><span class="status-pill <%= s.connected?'okbg':'badbg' %>"><%= s.connected?'SESSION AKTIF/TERSIMPAN':'SESSION BELUM ADA' %></span><span><%= s.historyCount %> rekap</span></div></a><% }) %></div><% } %>
+</main></div></body></html>
