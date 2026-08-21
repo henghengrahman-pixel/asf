@@ -1,0 +1,24 @@
+{
+  "name": "dp-checker-panel",
+  "version": "1.2.1",
+  "private": true,
+  "description": "Railway batch DP checker dengan retry, progress real-time, periode tanggal, dan transaksi lengkap per UserId",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "node --check src/server.js && node --check src/checker.js && node --check src/logic.js && node --check src/store.js && node --check src/security.js && node --check test-logic.js && node --check test-checker-exports.js",
+    "test": "node test-logic.js && node test-checker-exports.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "helmet": "^8.1.0",
+    "playwright": "1.55.0",
+    "session-file-store": "^1.5.0"
+  }
+}

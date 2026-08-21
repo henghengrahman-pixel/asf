@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cek DP - DP Checker</title><link rel="stylesheet" href="/app.css"></head>
+<body>
+<header class="topbar"><div><b>DP CHECKER PANEL</b></div><form method="post" action="/logout"><button class="btn ghost">Logout</button></form></header>
+<div class="layout">
+<aside class="sidebar"><a href="/">Dashboard</a><a class="active" href="/check">Cek DP</a><a href="/history">Riwayat Rekap</a><a href="/session-agent">Session Agen</a></aside>
+<main class="content">
+<section class="panel">
+  <h1>Batch Cek DP</h1>
+  <p class="muted">Masukkan banyak UserId. Sistem tetap menjalankan alur Cari → validasi ID → History Bank popup → baca transaksi.</p>
+  <div class="mini-info"><span>Worker paralel: <b><%= concurrency %></b></span><span>Retry otomatis: <b><%= retries %>x</b></span><span>Maksimal: <b><%= maxIds %> ID</b></span></div>
+  <% if(!connected){ %><div class="alert error">Session agen belum ada. <a href="/session-agent">Pasang session agen dahulu.</a></div><% } %>
+
+  <div class="date-box">
+    <h3>Periode Pengecekan</h3>
+    <div class="date-modes">
+      <label><input type="radio" name="dateMode" value="today" checked> Hari ini</label>
+      <label><input type="radio" name="dateMode" value="yesterday"> Kemarin</label>
+      <label><input type="radio" name="dateMode" value="single"> Pilih tanggal</label>
+      <label><input type="radio" name="dateMode" value="range"> Rentang tanggal</label>
+    </div>
+    <div id="singleBox" class="date-input hidden"><label>Tanggal <input id="singleDate" type="date" value="<%= todayIso %>"></label></div>
+    <div id="rangeBox" class="date-range hidden"><label>Dari <input id="startDate" type="date" value="<%= yesterdayIso %>"></label><label>Sampai <input id="endDate" type="date" value="<%= todayIso %>"></label></div>
+  </div>
+
+  <label class="field-label">Daftar UserId</label>
+  <textarea id="ids" rows="14" placeholder="member001&#10;member002&#10;member003"></textarea>
+  <div class="row"><button id="start" class="btn primary" <%= connected?'':'disabled' %>>CEK SEMUA</button><span id="count" class="muted">0 ID</span></div>
+</section>
+
+<section id="progressBox" class="panel hidden">
+  <div class="space"><div><h2>Progress Real-time</h2><div id="periodText" class="muted"></div></div><div id="doneBadge" class="status-pill okbg hidden">SELESAI</div></div>
+  <div class="progress"><div id="bar"></div></div>
+  <div id="progressText">Menunggu...</div>
+  <div id="liveItems" class="job-grid"></div>
+  <div class="panel-sub"><h3>Hasil yang Sudah Selesai</h3><div id="liveResults" class="table-wrap"><p class="empty">Belum ada hasil.</p></div></div>
+</section>
+</main></div>
+<script>
+const ids=document.getElementById('ids'),count=document.getElementById('count'),btn=document.getElementById('start');
+let jobId=null,timer=null;
+function parsed(){return [...new Set(ids.value.split(/[\n,;\s]+/).map(x=>x.trim()).filter(Boolean))]}
+ids.addEventListener('input',()=>count.textContent=parsed().length+' ID');
+const radios=[...document.querySelectorAll('input[name="dateMode"]')];
+function syncDateMode(){const m=radios.find(x=>x.checked)?.value||'today';document.getElementById('singleBox').classList.toggle('hidden',m!=='single');document.getElementById('rangeBox').classList.toggle('hidden',m!=='range')}
+radios.forEach(x=>x.addEventListener('change',syncDateMode)); syncDateMode();
+btn?.addEventListener('click',async()=>{
+  const list=parsed(); if(!list.length)return alert('Masukkan minimal 1 UserId.');
+  const dateMode=radios.find(x=>x.checked)?.value||'today';
+  btn.disabled=true; document.getElementById('progressBox').classList.remove('hidden');
+  const payload={ids:list,dateMode,singleDate:document.getElementById('singleDate').value,startDate:document.getElementById('startDate').value,endDate:document.getElementById('endDate').value};
+  try{
+    const r=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const j=await r.json();
+    if(!j.ok){alert(j.error||'Gagal membuat job');btn.disabled=false;return}
+    jobId=j.jobId; document.getElementById('periodText').textContent='Periode: '+(j.period?.label||''); timer=setInterval(poll,700); poll();
+  }catch(e){alert('Gagal membuat job: '+e.message);btn.disabled=false}
+});
+async function poll(){
+  try{
+    const r=await fetch('/api/jobs/'+jobId);const j=await r.json();if(!j.ok)return;
+    const x=j.job,total=x.ids?.length||0,done=x.completed||x.current||0,pct=total?Math.round((done/total)*100):0;
+    document.getElementById('bar').style.width=pct+'%';document.getElementById('progressText').textContent=`${done}/${total} selesai (${pct}%) · ${x.status}`;
+    renderItems(x.items||[]);renderResults(x.results||[],x.id);
+    if(x.status==='done'){clearInterval(timer);document.getElementById('doneBadge').classList.remove('hidden');setTimeout(()=>location.href='/result/'+jobId,700)}
+    else if(x.status==='failed'){clearInterval(timer);alert(x.error||'Pengecekan gagal');btn.disabled=false}
+  }catch(e){console.error(e)}
+}
+function renderItems(items){
+  const box=document.getElementById('liveItems');
+  box.innerHTML=items.map(it=>{
+    const cls=it.status==='has_dp'?'ok':it.status==='no_dp'?'warn':it.status==='invalid'||it.status==='error'?'bad':'';
+    const retry=it.attempt?` · percobaan ${it.attempt}/${it.maxAttempts||1}`:'';
+    return `<div class="job-item"><div><b>${esc(it.userId)}</b><div class="muted small">${esc(it.step||'Menunggu')}${retry}</div></div><span class="${cls}">${labelStatus(it.status)}</span></div>`;
+  }).join('');
+}
+function labelStatus(s){return ({queued:'Menunggu',running:'Proses',has_dp:'Ada DP',no_dp:'Tidak ada DP',invalid:'ID tidak valid',error:'Error'})[s]||s}
+function renderResults(rows,batchId){
+  const box=document.getElementById('liveResults'); if(!rows.length){box.innerHTML='<p class="empty">Belum ada hasil.</p>';return}
+  box.innerHTML='<table><thead><tr><th>UserId</th><th>Status</th><th>DP Valid</th><th>Total</th><th>Retry</th></tr></thead><tbody>'+rows.map(r=>`<tr><td><b>${esc(r.userId)}</b></td><td>${esc(r.keterangan)}</td><td>${r.jumlahDp||0}</td><td>Rp${Number(r.totalDp||0).toLocaleString('id-ID')}</td><td>${r.attemptUsed||1} percobaan</td></tr>`).join('')+'</tbody></table>'
+}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+</script></body></html>
