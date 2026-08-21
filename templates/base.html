@@ -1,0 +1,36 @@
+<!doctype html><html lang="id" data-theme="{{g.theme or 'dark'}}"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}MARKETING 8008 CRM{% endblock %}</title><link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+</head><body class="ri81-app">
+<aside class="sidebar"><div class="brand brand-no-mark"><div><h2>MARKETING 8008</h2><small>CRM OPERASIONAL</small></div></div><nav>
+<a class="{% if request.endpoint=='dashboard' %}active{% endif %}" href="{{url_for('dashboard')}}">⌂ <span>Dashboard</span></a>
+{% if g.user and g.user.role!='staff' %}
+<div class="nav-label">WEBSITE</div>
+<a href="/dp/master-websites" class="{% if request.path.startswith('/dp/master-websites') %}active{% endif %}">◆ <span>Master Website</span></a>
+{% for w in crm_websites %}<a class="{% if request.path=='/website/' ~ w.id %}active{% endif %}" href="{{url_for('website_hub',site_id=w.id)}}">◈ <span>{{w.name}}</span></a>{% endfor %}
+<div class="nav-label">DATA STAF</div>
+<a class="{% if request.endpoint in ['staff_page','staff_detail'] %}active{% endif %}" href="{{url_for('staff_page')}}">♙ <span>Semua Data Staf</span></a>
+<a class="{% if request.endpoint=='staff_add_page' %}active{% endif %}" href="{{url_for('staff_add_page')}}">＋ <span>Tambah Staf</span></a>
+<a class="{% if request.endpoint=='leader_reports_page' %}active{% endif %}" href="{{url_for('leader_reports_page')}}">▤ <span>Laporan Leader</span></a>
+<a class="{% if request.endpoint=='inout_live_page' %}active{% endif %}" href="{{url_for('inout_live_page')}}">◉ <span>IN OUT Real Time</span></a>
+<div class="nav-label">OPERASIONAL KERJA</div>
+<a href="{{url_for('shifts_page')}}">◷ <span>Shift Global</span></a>
+<a href="{{url_for('operations_page')}}#assignmentEditor">＋ <span>Tambah Penugasan</span></a>
+<a href="{{url_for('operations_page')}}#assignmentBoard">▦ <span>Board Penugasan Aktif</span></a>
+<div class="nav-label">DATA & PENGATURAN</div>
+<a class="{% if request.endpoint in ['offices_page','office_detail'] %}active{% endif %}" href="{{url_for('offices_page')}}">⌖ <span>Kantor</span></a>
+<a class="{% if request.endpoint=='channels_page' %}active{% endif %}" href="{{url_for('channels_page')}}">▧ <span>Master Jobdesk</span></a>
+<a class="{% if request.endpoint=='users_page' %}active{% endif %}" href="{{url_for('users_page')}}">⚿ <span>Pengguna dan Akses</span></a>
+<a class="{% if request.endpoint=='login_logs_page' %}active{% endif %}" href="{{url_for('login_logs_page')}}">≋ <span>Log Login & Akses</span></a>
+<a class="{% if request.endpoint=='audit_page' %}active{% endif %}" href="{{url_for('audit_page')}}">⌁ <span>Audit Perubahan</span></a>
+{% if g.user.role=='superadmin' %}<a class="{% if request.endpoint=='policy_settings_page' %}active{% endif %}" href="{{url_for('policy_settings_page')}}">⚙ <span>Pengaturan Kantor</span></a>{% endif %}
+{% endif %}
+<div class="nav-label">AKUN AKSES</div>
+<a class="{% if request.endpoint=='attendance_page' %}active{% endif %}" href="{{url_for('attendance_page')}}">✓ <span>Absensi Staf</span></a>
+<a class="{% if request.endpoint=='inout_page' %}active{% endif %}" href="{{url_for('inout_page')}}">⇄ <span>IN / OUT Izin Keluar</span></a>
+<a class="{% if request.endpoint=='nawala_page' %}active{% endif %}" href="{{url_for('nawala_page')}}">◎ <span>Cek Nawala</span></a>
+<a class="{% if request.endpoint=='account_page' %}active{% endif %}" href="{{url_for('account_page')}}">⚙ <span>Akun Saya</span></a>
+</nav><div class="side-footer"><div><b>{{g.user.username if g.user else ''}}</b><small>{{g.user.role|upper if g.user else ''}}</small></div><a href="{{url_for('logout')}}">Logout</a></div></aside>
+<main><header class="topbar"><div><strong>{% block page_title %}Dashboard{% endblock %}</strong><small>MARKETING 8008 • CRM TERPADU</small></div><div class="top-actions"><a class="theme-mini" href="{{url_for('set_theme',mode='light' if (g.theme or 'dark')=='dark' else 'dark')}}">{{'☀' if (g.theme or 'dark')=='dark' else '☾'}}</a><div class="user-pill"><span class="avatar">{{(g.user.username[0]|upper) if g.user else 'M'}}</span><div><b>{{g.user.username if g.user else ''}}</b><small>{{g.user.role|upper if g.user else ''}}</small></div></div></div></header>
+{% with m=get_flashed_messages(with_categories=true) %}{% for c,x in m %}<div class="flash {{c}}">{{x}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
+{% if g.user and g.policy_pending and g.policy_config %}<div class="policy-backdrop"><section class="policy-modal"><div class="policy-head"><div class="warning-icon">!</div><div><h2>{{g.policy_config.title}}</h2><strong>{{g.policy_config.subtitle}}</strong></div></div><ol class="policy-list">{% for rule in g.policy_config.rules %}<li>{{rule}}</li>{% endfor %}</ol><div class="policy-warning">{{g.policy_config.warning}}</div><div class="policy-message">{{g.policy_config.message}}</div><div class="policy-actions"><form method="post" action="{{url_for('policy_decision')}}"><input type="hidden" name="decision" value="tidak_setuju"><button class="policy-btn decline">✕ TIDAK SETUJU</button></form><form method="post" action="{{url_for('policy_decision')}}"><input type="hidden" name="decision" value="setuju"><input type="hidden" name="next" value="{{request.full_path}}"><button class="policy-btn accept">✓ SETUJU</button></form></div></section></div>{% endif %}
+</body></html>
